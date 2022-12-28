@@ -2,8 +2,12 @@ import ccxt #  https://github.com/ccxt/ccxt/tree/master/python
 import time
 from datetime import datetime
 import plotly.graph_objects as go
+import requests
+import json
 
 # print(ccxt.exchanges)
+
+
 
 binance = ccxt.binanceus()
 markets = binance.load_markets()
@@ -41,3 +45,11 @@ for c in currencies:
         coinSet.add(currencies[c]['id'])
 for coin in coinSet:
     optionList.append({'label': coin ,'value': coin+'/'+'USD'})
+    
+    
+def grabAvg(symbol):
+    request = requests.get('https://api.binance.us/api/v3/avgPrice?symbol=' + symbol + 'USD')
+    json = request.json()
+    return json['price']
+
+grabAvg('BTC')

@@ -1,13 +1,17 @@
 # Run this app with `python app.py` and
 # visit http://127.0.0.1:8050/ in your web browser.
 
-from dash import Dash, dcc, html, Input, Output
+from dash import Dash, dcc, html
+from dash.dependencies import Input, Output
+from dash.exceptions import PreventUpdate
+import dash_bootstrap_components as dbc
 import plotly.express as px
 import pandas as pd
 # import coinbase_helper
-import ccxt_helper as help
+import api_helper as help
+import layout_helper as lay
 
-app = Dash(__name__, title='Mock Crypto Wallet')
+app = Dash(__name__, title='Mock Crypto Wallet', external_stylesheets=[dbc.themes.BOOTSTRAP])
 
 colors = {
     'background': '#111111',
@@ -16,15 +20,6 @@ colors = {
 
 # assume you have a "long-form" data frame
 # see https://plotly.com/python/px-arguments/ for more options
-
-# Building DF and Figure for Historical Data Chart
-histDF = px.data.stocks()
-histFig = px.line(histDF, x='date', y='GOOG')
-histFig.update_layout(
-    plot_bgcolor=colors['background'],
-    paper_bgcolor=colors['background'],
-    font_color=colors['text']
-)
 
 app.layout = html.Div(style={'backgroundColor': colors['background']}, children=[
 
@@ -60,8 +55,25 @@ app.layout = html.Div(style={'backgroundColor': colors['background']}, children=
         'color': colors['text']
     }),
     
-    # html.Div()
-
+    # Wallet Buttons
+    html.Div(
+        children=[
+            dbc.Button(id='buy', children=['Buy'], color="Primary"),
+            dbc.Button(id='sell', children=['Sell'], color="Primary")
+            ],
+        style = {
+            'display': 'inline-block'
+        }),
+    
+    # Gui to add coins
+    
+    lay.buy_form_div,
+    
+    # Wallet coins
+    html.Div(
+        id='coins',
+        children=[]
+    )
 
 ])
 
@@ -77,6 +89,29 @@ def display_time_series(ticker):
         font_color=colors['text']
     )
     return fig
+
+@app.callback(
+    Output("buy_div", "hidden"),
+    Input("buy", "n_clicks"))
+def display_buy_form(n_clicks):
+    if n_clicks is None:
+        raise PreventUpdate
+    if n_clicks % 2 == 0:
+        return True
+    return False
+
+@app.callback(
+    Output("coins", "children"),
+    [Input("buy_submit", "n_clicks"),
+     Input("coins_buy", "value"),
+     Input("price_buy", "value")]
+)
+def buy_coin(button, coin, price):
+    if button is None:
+        raise PreventUpdate
+    if button % 2 == 0:
+        return True
+    return False
 
 if __name__ == '__main__':
     app.run_server(debug=True)
