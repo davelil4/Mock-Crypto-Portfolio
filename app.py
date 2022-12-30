@@ -2,7 +2,7 @@
 # visit http://127.0.0.1:8050/ in your web browser.
 
 from dash import Dash, dcc, html
-from dash.dependencies import Input, Output
+from dash.dependencies import Input, Output, State
 from dash.exceptions import PreventUpdate
 import dash_bootstrap_components as dbc
 import plotly.express as px
@@ -11,71 +11,57 @@ import pandas as pd
 import api_helper as help
 import layout_helper as lay
 
-app = Dash(__name__, title='Mock Crypto Wallet', external_stylesheets=[dbc.themes.BOOTSTRAP])
+dbc_css = "https://cdn.jsdelivr.net/gh/AnnMarieW/dash-bootstrap-templates/dbc.min.css"
+app = Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP, dbc_css])
 
-colors = {
-    'background': '#111111',
-    'text': '#7FDBFF'
-}
+# colors = {
+#     'background': '#111111',
+#     'text': '#7FDBFF'
+# }
 
 # assume you have a "long-form" data frame
 # see https://plotly.com/python/px-arguments/ for more options
 
-app.layout = html.Div(style={'backgroundColor': colors['background']}, children=[
+app.layout = dbc.Container(children=[
 
     html.H1(
         children='Mock Crypto Wallet',
-        style={
-            'textAlign': 'center',
-            'color': colors['text']
-        }
+        className="bg-primary text-white p-2 mb-2 text-center"
     ),
 
     html.Div(children='A mock crypto wallet you can run from your own computer.', style={
         'textAlign': 'center',
-        'color': colors['text']
+        # 'color': colors['text']
     }),
 
 
     # Dropdown to change which coin data is showing from BINANCE
     html.Div(children=[
-        html.H4('Crypto price analysis'),
+        html.H4('Crypto price analysis', 
+                # style={"color": colors['text']}
+                ),
         dcc.Graph(id="time-series-chart"),
-        html.P("Select coin:"),
+        html.P("Select coin:", 
+            #    style={"color": colors['text']}
+               ),
         dcc.Dropdown(
             id="ticker",
             options=help.optionList,
             value='BTC/USD',
-            clearable=False
+            clearable=False,
+            className="mb-4"
         ),
     ]),
     
-    html.H2('Wallet', style={
-        'textAlign': 'center',
-        'color': colors['text']
-    }),
+    lay.row1,
+    lay.row2,
+    lay.row3,
+    lay.row4
     
-    # Wallet Buttons
-    html.Div(
-        children=[
-            dbc.Button(id='buy', children=['Buy'], color="Primary"),
-            dbc.Button(id='sell', children=['Sell'], color="Primary")
-            ],
-        style = {
-            'display': 'inline-block'
-        }),
-    
-    # Gui to add coins
-    
-    lay.buy_form_div,
-    
-    # Wallet coins
-    html.Div(
-        id='coins',
-        children=[]
-    )
 
-])
+    ],
+    className="dbc"
+    )
 
 # This is to manage changes in inputs from the dropdown, and changes the chart.
 @app.callback(
@@ -83,11 +69,11 @@ app.layout = html.Div(style={'backgroundColor': colors['background']}, children=
     Input("ticker", "value"))
 def display_time_series(ticker):
     fig = help.chartCoin(ticker)
-    fig.update_layout(
-        plot_bgcolor=colors['background'],
-        paper_bgcolor=colors['background'],
-        font_color=colors['text']
-    )
+    # fig.update_layout(
+    #     plot_bgcolor=colors['background'],
+    #     paper_bgcolor=colors['background'],
+    #     font_color=colors['text']
+    # )
     return fig
 
 @app.callback(
@@ -101,17 +87,21 @@ def display_buy_form(n_clicks):
     return False
 
 @app.callback(
-    Output("coins", "children"),
+    Output("coin_rows", "children"),
     [Input("buy_submit", "n_clicks"),
      Input("coins_buy", "value"),
-     Input("price_buy", "value")]
+     Input("price_buy", "value"),
+     State("coin_rows", "children")],
+    # prevent_initial_call=True
 )
-def buy_coin(button, coin, price):
+def buy_coin(button, coin, price, child):
+    new = child.copy()
     if button is None:
         raise PreventUpdate
-    if button % 2 == 0:
-        return True
-    return False
+    if button != 0 and len(new) != button:
+        new.append(html.Tr(id=coin, children=[html.Td(coin), html.Td(price), html.Td("0")]))
+        return new
+    return new
 
 if __name__ == '__main__':
     app.run_server(debug=True)
