@@ -1,3 +1,7 @@
 constants.py
 .vscode/
 coin/
+venv/
+linev/
+__pycache__/
+38venv/

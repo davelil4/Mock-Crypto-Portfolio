@@ -7,7 +7,6 @@ from dash.exceptions import PreventUpdate
 import dash_bootstrap_components as dbc
 import plotly.express as px
 import pandas as pd
-# import coinbase_helper
 import api_helper as help
 import layout_helper as lay
 
@@ -56,6 +55,7 @@ app.layout = dbc.Container(children=[
     lay.row1,
     lay.row2,
     lay.row3,
+    dcc.Store(id='coin_mem', storage_type='local'),
     lay.row4
     
 
@@ -78,7 +78,7 @@ def display_time_series(ticker):
 
 @app.callback(
     Output("buy_div", "hidden"),
-    Input("buy", "n_clicks"))
+    Input("buy_b", "n_clicks"))
 def display_buy_form(n_clicks):
     if n_clicks is None:
         raise PreventUpdate
@@ -86,22 +86,61 @@ def display_buy_form(n_clicks):
         return True
     return False
 
+# Callbacks for table involving storing local data
+
+# Updates coins from data held locally
 @app.callback(
     Output("coin_rows", "children"),
-    [Input("buy_submit", "n_clicks"),
-     Input("coins_buy", "value"),
-     Input("price_buy", "value"),
-     State("coin_rows", "children")],
-    # prevent_initial_call=True
+    Input('coin_mem', 'modified_timestamp'),
+    State('coin_mem', 'data')
 )
-def buy_coin(button, coin, price, child):
-    new = child.copy()
-    if button is None:
+def coin_data(ts, data):
+    if ts is None:
         raise PreventUpdate
-    if button != 0 and len(new) != button:
+    
+    data = data or {}
+    return data.get('t_rows', None)
+
+# Updates coin table data
+@app.callback(
+    Output("coin_mem", "data"),
+    [Input("reset", "n_clicks"),
+    Input("buy_submit", "n_clicks"),
+    Input("coins_buy", "value"),
+    Input("price_buy", "value"),
+    State('coin_mem', 'data')]
+
+)
+def update_coins(reset, button, coin, price, data):
+    if button is None or reset is None:
+        raise PreventUpdate
+
+    data = data or {'t_rows': []}
+
+    if reset>0:
+        data = None
+        return data
+
+    if button != 0 and len(data['t_rows']) != button:
+        new = data['t_rows'].copy()
         new.append(html.Tr(id=coin, children=[html.Td(coin), html.Td(price), html.Td("0")]))
-        return new
-    return new
+        data['t_rows'] = new
+        return data
+
+    
+    return data
+
+# # Resets whole coin memory
+@app.callback(
+    Output("reset", "n_clicks"),
+    Input('coin_mem', 'modified_timestamp')
+)
+def reset(ts):
+    if ts is None:
+        raise PreventUpdate
+    
+    return 0
+
 
 if __name__ == '__main__':
     app.run_server(debug=True)
