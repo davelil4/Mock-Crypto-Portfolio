@@ -56,7 +56,7 @@ app.layout = dbc.Container(children=[
     lay.row2,
     lay.buy_form_div,
     dcc.Store(id='coin_mem', storage_type='local'),
-    lay.row5,
+    # lay.row5,
     dbc.Row(id="pd_row", children=[])
     
 
@@ -163,8 +163,8 @@ def display_buy_form(n_clicks):
 def pd_data(ts, data):
     if ts is None:
         raise PreventUpdate
-    data = data or {}
-    return dbc.Table.from_dataframe(pd.DataFrame(data['df']), dark=False) or []
+    data = data or {'df': pd.DataFrame(columns=["Coin", "Current Price", "% start"])}
+    return dbc.Table.from_dataframe(pd.DataFrame(data['df']), dark=False)
 
 # Updates coin table data
 @app.callback(
@@ -177,12 +177,9 @@ def pd_data(ts, data):
 
 )
 def update_coins_pd(reset, button, coin, price, data):
+    
 
-    data = {'df': pd.DataFrame({
-        "Coin": [],
-        "Current Price": [],
-        "% start": []
-    }).to_dict("records")}
+    data = data or {}
 
     if reset>0:
         data = None
@@ -191,17 +188,40 @@ def update_coins_pd(reset, button, coin, price, data):
 
 
     if button != None and button != 0 and price != None:
-        new = pd.DataFrame(data['df'])
+        if data == {}:
+            new = pd.DataFrame(columns=["Coin", "Current Price", "% start"])
+        else: new = pd.DataFrame(data['df'])
         new = pd.concat([pd.DataFrame({
             "Coin": [coin],
             "Current Price": [price],
             "% start": "0"
         }), new])
-        data['df'] = new.to_dict("records")
+        data['df'] = new.to_dict(orient='records')
         return data
 
     
     return data
+
+# Adjusts buy clicks to and allows reset to work without adding more coins
+@app.callback(
+    Output("buy_submit", "n_clicks"),
+    [Input('reset', 'n_clicks'),
+    State("buy_submit", "n_clicks"),
+    Input("coin_mem", "modified_timestamp")]
+)
+def reset_buy(reset, buy, ts):
+    if reset is None or reset == 0:
+        raise PreventUpdate
+    return 0
+
+@app.callback(
+    Output("reset", "n_clicks"),
+    [Input("coin_mem", "modified_timestamp")]
+)
+def reset_buy(reset):
+    if reset is None:
+        raise PreventUpdate
+    return 0
 
 if __name__ == '__main__':
     app.run_server(debug=True)

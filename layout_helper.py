@@ -48,9 +48,9 @@ buy_submit = dbc.Button(id="buy_submit", children="Submit", color="secondary")
 
 
 # Coin table
-coin_table_head = [html.Thead(html.Tr([html.Th("Coin"), html.Th("Current Price ($)"), html.Th("% start")]))]
-coin_table_rows = [html.Tbody(id="coin_rows", children=[])]
-coin_table = dbc.Table(coin_table_head + coin_table_rows, bordered=True, dark=False)
+# coin_table_head = [html.Thead(html.Tr([html.Th("Coin"), html.Th("Current Price ($)"), html.Th("% start")]))]
+# coin_table_rows = [html.Tbody(id="coin_rows", children=[])]
+# coin_table = dbc.Table(coin_table_head + coin_table_rows, bordered=True, dark=False)
 
 pandasTable = dbc.Table()
 
@@ -73,4 +73,4 @@ row3 = dbc.Row(
             className="g-2"
         )
 buy_form_div = html.Div(id="buy_div", children=[row3], hidden=True, className="mb-4", style={'width': "auto"})
-row5 = dbc.Row(dbc.Col(coin_table))
+# row5 = dbc.Row(dbc.Col(coin_table))
