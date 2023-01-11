@@ -1,6 +1,4 @@
-from dash import Dash, dcc, html
-from dash.dependencies import Input, Output
-from dash.exceptions import PreventUpdate
+from dash import dcc, html
 import dash_bootstrap_components as dbc
 import api_helper as help
 
@@ -16,7 +14,7 @@ reset_btn = dbc.Button(id='reset', children=['Reset'], color="primary", n_clicks
 USD_bal = dbc.InputGroup(
             [
                 dbc.InputGroupText("$"),
-                dbc.Input(placeholder="Initial Balance", type="number"),
+                dbc.Input(id="bank", placeholder="Initial Balance", type="number"),
             ]
         )
 wallet_bal = dbc.Col(html.P("0"))
@@ -24,9 +22,6 @@ wallet_bal = dbc.Col(html.P("0"))
 
 
 # Building buy form
-# buy_coin_dropdown = html.Div(
-    # [
-        # dbc.Label("Coin", html_for="dropdown", width="auto"),
 buy_coin_dropdown = dcc.Dropdown(
             id="coins_buy",
             options=help.optionList,
@@ -34,9 +29,6 @@ buy_coin_dropdown = dcc.Dropdown(
             clearable=True,
             style={'width': "100px"}
         ),
-    # ],
-    
-# )
 price_buy = dbc.InputGroup(
             [
                 dbc.InputGroupText("$"),
@@ -45,12 +37,6 @@ price_buy = dbc.InputGroup(
             ]
         )
 buy_submit = dbc.Button(id="buy_submit", children="Submit", color="secondary")
-
-
-# Coin table
-# coin_table_head = [html.Thead(html.Tr([html.Th("Coin"), html.Th("Current Price ($)"), html.Th("% start")]))]
-# coin_table_rows = [html.Tbody(id="coin_rows", children=[])]
-# coin_table = dbc.Table(coin_table_head + coin_table_rows, bordered=True, dark=False)
 
 pandasTable = dbc.Table()
 
@@ -73,4 +59,3 @@ row3 = dbc.Row(
             className="g-2"
         )
 buy_form_div = html.Div(id="buy_div", children=[row3], hidden=True, className="mb-4", style={'width': "auto"})
-# row5 = dbc.Row(dbc.Col(coin_table))
