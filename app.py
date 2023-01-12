@@ -5,23 +5,21 @@ from dash import Dash, dcc, html
 from dash.dependencies import Input, Output, State
 from dash.exceptions import PreventUpdate
 import dash_bootstrap_components as dbc
-import plotly.express as px
+# import plotly.express as px
 import pandas as pd
+import plotly.graph_objects as go
 import api_helper as help
 import layout_helper as lay
 
 dbc_css = "https://cdn.jsdelivr.net/gh/AnnMarieW/dash-bootstrap-templates/dbc.min.css"
 app = Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP, dbc_css])
 
-# colors = {
-#     'background': '#111111',
-#     'text': '#7FDBFF'
-# }
-
 # assume you have a "long-form" data frame
 # see https://plotly.com/python/px-arguments/ for more options
 
 app.layout = dbc.Container(children=[
+    dcc.Store(id='coin_mem', storage_type='local'),
+    dcc.Store(id='bal_ses', storage_type='memory'),
 
     html.H1(
         children='Mock Crypto Wallet',
@@ -29,20 +27,15 @@ app.layout = dbc.Container(children=[
     ),
 
     html.Div(children='A mock crypto wallet you can run from your own computer.', style={
-        'textAlign': 'center',
-        # 'color': colors['text']
+        'textAlign': 'center'
     }),
 
 
     # Dropdown to change which coin data is showing from BINANCE
     html.Div(children=[
-        html.H4('Crypto price analysis', 
-                # style={"color": colors['text']}
-                ),
+        html.H4('Crypto price analysis'),
         dcc.Graph(id="time-series-chart"),
-        html.P("Select coin:", 
-            #    style={"color": colors['text']}
-               ),
+        html.P("Select coin:"),
         dcc.Dropdown(
             id="ticker",
             options=help.optionList,
@@ -55,11 +48,8 @@ app.layout = dbc.Container(children=[
     lay.row1,
     lay.row2,
     lay.buy_form_div,
-    dcc.Store(id='coin_mem', storage_type='local'),
-    lay.row5,
     dbc.Row(id="pd_row", children=[])
     
-
     ],
     className="dbc"
     )
@@ -70,11 +60,6 @@ app.layout = dbc.Container(children=[
     Input("ticker", "value"))
 def display_time_series(ticker):
     fig = help.chartCoin(ticker)
-    # fig.update_layout(
-    #     plot_bgcolor=colors['background'],
-    #     paper_bgcolor=colors['background'],
-    #     font_color=colors['text']
-    # )
     return fig
 
 @app.callback(
@@ -87,74 +72,12 @@ def display_buy_form(n_clicks):
         return True
     return False
 
-# Callbacks for table involving storing local data
-
-# # Updates coins from data held locally
-# @app.callback(
-#     Output("coin_rows", "children"),
-#     Input("coin_mem", "modified_timestamp"),
-#     State("coin_mem", "data")
-# )
-# def coin_data(ts, data):
-#     if ts is None:
-#         raise PreventUpdate
-    
-#     data = data or {}
-#     return data.get('t_rows', None)
-
-# # Updates coin table data
-# @app.callback(
-#     Output("coin_mem", "data"),
-#     [State("reset", "n_clicks"),
-#     Input("buy_submit", "n_clicks"),
-#     State("coins_buy", "value"),
-#     State("price_buy", "value"),
-#     State('coin_mem', 'data')]
-
-# )
-# def update_coins(reset, button, coin, price, data):
-
-#     data = data or {'t_rows': []}
-
-#     if reset>0:
-#         data = None
-#         return data
 
 
 
-#     if button != None and button != 0 and price != None:
-#         new = data['t_rows'].copy()
-#         new.append(html.Tr(id=coin, children=[html.Td(coin), html.Td(price), html.Td("0")]))
-#         data['t_rows'] = new
-#         return data
+# UPDATES COINS IN WALLET
 
-    
-#     return data
-
-# # Sets reset buy clicks to 0
-# @app.callback(
-#     Output("reset", "n_clicks"),
-#     Input('coin_mem', 'modified_timestamp')
-# )
-# def reset(ts):
-#     if ts is None:
-#         raise PreventUpdate
-#     return 0
-
-# # Adjusts buy clicks to and allows reset to work without adding more coins
-# @app.callback(
-#     Output("buy_submit", "n_clicks"),
-#     [Input('reset', 'n_clicks'),
-#     State("buy_submit", "n_clicks"),
-#     Input("coin_mem", "modified_timestamp")]
-# )
-# def reset_buy(reset, buy, ts):
-#     if reset is None or reset == 0:
-#         raise PreventUpdate
-#     return 0
-
-
-# PANDAS DIFFERENCE
+# Updates coin chart after buying/selling/resetting coins
 @app.callback(
     Output("pd_row", "children"),
     Input("coin_mem", "modified_timestamp"),
@@ -163,8 +86,11 @@ def display_buy_form(n_clicks):
 def pd_data(ts, data):
     if ts is None:
         raise PreventUpdate
-    data = data or {}
-    return dbc.Table.from_dataframe(pd.DataFrame(data['df']), dark=False) or []
+    
+    if data is None or 'df' not in data.keys():
+        data = {'df': pd.DataFrame(columns=["Coin", "Current Price", "% start"])}
+    
+    return [dbc.Table.from_dataframe(pd.DataFrame(data['df']), dark=False)]
 
 # Updates coin table data
 @app.callback(
@@ -173,35 +99,90 @@ def pd_data(ts, data):
     Input("buy_submit", "n_clicks"),
     State("coins_buy", "value"),
     State("price_buy", "value"),
-    State('coin_mem', 'data')]
+    State("coin_mem", "data"),
+    Input("bank", "n_submit"),
+    State("bank", "value")]
 
 )
-def update_coins_pd(reset, button, coin, price, data):
-
-    data = {'df': pd.DataFrame({
-        "Coin": [],
-        "Current Price": [],
-        "% start": []
-    }).to_dict("records")}
+def update_coins_pd(reset, button, coin, price, data, bank, bValue):
+    
+    # if price is not None:
+    #     if bank is None or bank < price:
+    #         raise PreventUpdate
+    
+    data = data or {}
 
     if reset>0:
         data = None
         return data
 
-
-
+    if bank is not None and bank > 0:
+        data['bank'] = bValue
+    
     if button != None and button != 0 and price != None:
-        new = pd.DataFrame(data['df'])
+        if data == {} or 'df' not in data.keys():
+            new = pd.DataFrame(columns=["Coin", "Current Price", "% start"])
+            data['bank'] = 1000
+        else: new = pd.DataFrame(data['df'])
+        ticker = help.grabTicker(coin)
+        layout = go.Layout(
+            autosize=False,
+            width=100,
+            height=50)
+        ind_fig = go.Figure(layout=layout)
+        ind_fig.add_trace(go.Indicator(
+            mode = "number+delta",
+            value = ticker['open'],
+            number={"font":{"size":20}},
+            delta = {'reference': ticker['close'], 'relative': True}))
         new = pd.concat([pd.DataFrame({
             "Coin": [coin],
             "Current Price": [price],
-            "% start": "0"
+            "% start": [dcc.Graph(figure=ind_fig, style={'width': '90px', 'height': '90px'}).to_plotly_json()]
         }), new])
-        data['df'] = new.to_dict("records")
+        data['df'] = new.to_dict(orient='records')
+        data['bank'] = data['bank'] - price
         return data
 
-    
     return data
+
+# Adjusts buy clicks to and allows reset to work without adding more coins
+@app.callback(
+    Output("buy_submit", "n_clicks"),
+    [Input('reset', 'n_clicks'),
+    State("buy_submit", "n_clicks"),
+    Input("coin_mem", "modified_timestamp")]
+)
+def reset_buy(reset, buy, ts):
+    if reset is None or reset == 0:
+        raise PreventUpdate
+    return 0
+
+# Adjusts reset clicks
+@app.callback(
+    Output("reset", "n_clicks"),
+    [Input("coin_mem", "modified_timestamp")]
+)
+def reset_buy(reset):
+    if reset is None:
+        raise PreventUpdate
+    return 0
+
+# Updates Bank Balance
+@app.callback(
+    Output("bank", "value"),
+    [Input("coin_mem", "modified_timestamp"),
+    State("coin_mem", "data")]
+)
+def bank_data(ts, data):
+    if ts is None:
+        raise PreventUpdate
+    data = data or {'bank': 1000}
+    return data['bank']
+
+# Updates 
+
+
 
 if __name__ == '__main__':
     app.run_server(debug=True)
