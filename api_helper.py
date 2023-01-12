@@ -51,3 +51,6 @@ def grabAvg(symbol):
     request = requests.get('https://api.binance.us/api/v3/avgPrice?symbol=' + symbol + 'USD')
     json = request.json()
     return json['price']
+
+def grabTicker(symbol):
+    return binance.fetch_ticker(symbol)

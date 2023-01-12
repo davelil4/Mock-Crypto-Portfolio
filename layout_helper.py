@@ -14,10 +14,10 @@ reset_btn = dbc.Button(id='reset', children=['Reset'], color="primary", n_clicks
 USD_bal = dbc.InputGroup(
             [
                 dbc.InputGroupText("$"),
-                dbc.Input(id="bank", placeholder="Initial Balance", type="number"),
+                dbc.Input(id="bank", placeholder="Initial Balance", type="number", debounce=True),
             ]
         )
-wallet_bal = dbc.Col(html.P("0"))
+wallet_bal = html.P(id="bal", children="$0")
 
 
 
