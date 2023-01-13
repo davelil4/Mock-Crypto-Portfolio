@@ -10,12 +10,10 @@ import pandas as pd
 import plotly.graph_objects as go
 import api_helper as help
 import layout_helper as lay
+import helper as h
 
 dbc_css = "https://cdn.jsdelivr.net/gh/AnnMarieW/dash-bootstrap-templates/dbc.min.css"
 app = Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP, dbc_css])
-
-# assume you have a "long-form" data frame
-# see https://plotly.com/python/px-arguments/ for more options
 
 app.layout = dbc.Container(children=[
     dcc.Store(id='coin_mem', storage_type='local'),
@@ -58,53 +56,41 @@ app.layout = dbc.Container(children=[
 # This is to manage changes in inputs from the dropdown, and changes the chart.
 @app.callback(
     Output("time-series-chart", "figure"), 
-    Input("ticker", "value"))
-def display_time_series(ticker):
+    [Input("ticker", "value"),
+    Input("refresh", "n_clicks")])
+def display_time_series(ticker, refresh):
     fig = help.chartCoin(ticker)
     return fig
 
 # Shows buy drop-down menu
 @app.callback(
     Output("buy_div", "hidden"),
-    Input("buy_b", "n_clicks"))
-def display_buy_form(n_clicks):
+    [Input("buy_b", "n_clicks"),
+    Input("sell_b", "n_clicks")])
+def display_buy_form(n_clicks, sell_n_clicks):
     if n_clicks is None:
         raise PreventUpdate
-    if n_clicks % 2 == 0:
-        return True
-    return False
+    if (n_clicks + sell_n_clicks) % 2 != 0:
+        return False
+    return True
 
-# Sets submit button to buy
+# Updates wallet balance
 @app.callback(
-    Output("submit_mem", "data"),
-    Input("buy_b", "n_clicks"),
-    Input("sell_b", "n_clicks"),
-    State("buy_b", "active"),
-    State("sell_b", "active"))
-def submit_change(buy, sell, bActive, sActive):
-    if buy > 0 or sell > 0:
-        if bActive:
-            return {'submit': 'buy'}
-        elif sActive:
-            return {'submit': 'sell'}
-    return {}
+    Output("bal", "children"),
+    [Input("pd_row", "children"),
+    Input("coin_mem", "data")
+    ]
+)
+def update_wallet_bal(n, data):
+    data = data or None
+    if data is not None and 'df' in data.keys() and len(data['df']) != 0:
+        df = pd.DataFrame(data['df'])
+        return "Wallet Balance: $" + str(df['Current Price'].sum())
+    return "Wallet Balance: $0.00"
 
-# Resets buy button clicks
 
-# # Shows sell dropdown menu
-# @app.callback(
-#     Output("sell_div", "hidden"),
-#     Input("sell_b", "n_clicks"))
-# def display_sell_form(n_clicks):
-#     if n_clicks is None:
-#         raise PreventUpdate
-#     if n_clicks % 2 == 0:
-#         return True
-#     return False
 
-# UPDATES COINS IN WALLET
-
-# Updates coin chart after buying/selling/resetting coins
+# Updates app coin table after buying/selling/resetting coins
 @app.callback(
     Output("pd_row", "children"),
     Input("coin_mem", "modified_timestamp"),
@@ -114,10 +100,69 @@ def pd_data(ts, data):
     if ts is None:
         raise PreventUpdate
     
-    df = None
-    if data is None or 'df' not in data.keys():
-        data = {'df': pd.DataFrame(columns=["Coin", "Current Price", "% start"])}
-    else:
+    data = data or {'df': pd.DataFrame(columns=["Coin", "Current Price", "% start"])}
+    if 'df' not in data.keys() or len(data['df']) == 0:
+        data['df'] = pd.DataFrame(columns=["Coin", "Current Price", "% start"])
+    return [dbc.Table.from_dataframe(pd.DataFrame(data['df']), dark=False)]
+
+# Updates coin table data
+@app.callback(
+    Output("coin_mem", "data"),
+    [Input("reset", "n_clicks"),
+
+    State("coins_buy", "value"),
+    State("price_buy", "value"),
+    State("coin_mem", "data"),
+    Input("bank", "n_submit"),
+    State("bank", "value"),
+    Input("refresh", "n_clicks"),
+    State("buy_submit", "n_clicks_timestamp"),
+    State("buy_b", "n_clicks_timestamp"),
+    State("sell_b", "n_clicks_timestamp"),
+    State("refresh", "n_clicks_timestamp"),
+    State("reset", "n_clicks_timestamp")]
+)
+def update_coins_pd(reset, 
+                    coin, 
+                    price, 
+                    data, 
+                    bank, 
+                    bValue, 
+                    refresh,
+                    sub_time,
+                    buy_time,
+                    sell_time,
+                    refresh_time,
+                    reset_time):
+    
+    data = data or {}
+
+    if bank is not None and bank > 0:
+        data['bank'] = bValue
+    
+    if reset_time is None or buy_time is None or sell_time is None or refresh_time is None:
+        if reset_time is None:
+            reset_time = 0
+        if buy_time is None:
+            buy_time = 0
+        if sell_time is None:
+            sell_time = 0
+        if refresh_time is None: 
+            refresh_time = 0
+        if sub_time is None:
+            sub_time = 0
+    
+    if reset_time != 0 or sub_time != 0 or buy_time != 0 or sell_time != 0:
+        if reset_time == max(reset_time, sub_time, refresh_time):
+            data = None
+        elif sub_time == max(reset_time, sub_time, refresh_time):
+            if buy_time == max(buy_time, sell_time):
+                data = h.purchase(coin, price, data)
+            elif sell_time == max(sell_time, buy_time):
+                data = h.sell(coin, price, data)
+
+    # Updates Coins if market price changes
+    if not (data is None or 'df' not in data.keys()) and len(data['df']) != 0:
         df = pd.DataFrame(pd.DataFrame(data['df']))
         df.reset_index()
         for index, row in df.iterrows():
@@ -138,95 +183,9 @@ def pd_data(ts, data):
                 if change != 0:
                     df.loc[(df['Coin'] == row['Coin']), ('Current Price')] = round((row['Current Price'] * (1 - change)), 2)
                 df.loc[(df['Coin'] == row['Coin']), ('% start')] = [dcc.Graph(figure=ind_fig, style={'width': '90px', 'height': '90px'}).to_plotly_json()]
-    if df is not None:
-        return [dbc.Table.from_dataframe(df, dark=False)]
-    return [dbc.Table.from_dataframe(pd.DataFrame(data['df']), dark=False)]
-
-# Updates coin table data
-@app.callback(
-    Output("coin_mem", "data"),
-    [State("reset", "n_clicks"),
-    Input("buy_submit", "n_clicks"),
-    State("coins_buy", "value"),
-    State("price_buy", "value"),
-    State("coin_mem", "data"),
-    Input("bank", "n_submit"),
-    State("bank", "value"),
-    Input("sell_submit", "n_clicks"),
-    State("submit_mem", "data")
-    ]
-
-)
-def update_coins_pd(reset, button, coin, price, data, bank, bValue, submit_data):
-    
-    # if price is not None:
-    #     if bank is None or bank < price:
-    #         raise PreventUpdate
-    
-    data = data or {}
-
-    if reset>0:
-        data = None
-        return data
-
-    if bank is not None and bank > 0:
-        data['bank'] = bValue
-    
-    if button != None and button != 0 and price != None and submit_data['submit'] == 'buy':
-        if data == {} or 'df' not in data.keys():
-            new = pd.DataFrame(columns=["Coin", "Current Price", "% start"])
-            data['bank'] = 1000
-        else: new = pd.DataFrame(data['df'])
-        if coin in new['Coin'].unique():
-            new.loc[(new['Coin'] == coin), ('Current Price')] = round(
-                (new.loc[(new['Coin'] == coin), ('Current Price')]) + price, 2)
-            data['df'] = new.to_dict(orient='records')
-        else:
-            ticker = help.grabTicker(coin)
-            layout = go.Layout(
-                autosize=False,
-                width=100,
-                height=50)
-            ind_fig = go.Figure(layout=layout)
-            ind_fig.add_trace(go.Indicator(
-                mode = "number+delta",
-                value = ticker['close'],
-                number = { "font": { "size": 20 }},
-                delta = {'reference': ticker['open'], 'relative': True}))
-            new = pd.concat([pd.DataFrame({
-                "Coin": [coin],
-                "Current Price": [price],
-                "% start": [dcc.Graph(figure=ind_fig, style={'width': '90px', 'height': '90px'}).to_plotly_json()]
-            }), new])
-            data['df'] = new.to_dict(orient='records')
-            data['bank'] = round((data['bank'] - price), 2)
-            data[coin+'_start'] = ticker['close']
-        return data
-    # elif button != None and button != 0 and price != None and submit_data['submit'] == 'sell': 
-
+                data[coin+'_start'] = ticker['close']
+        data['df'] = df.to_dict(orient='records')
     return data
-
-# Adjusts buy clicks to and allows reset to work without adding more coins
-@app.callback(
-    Output("buy_submit", "n_clicks"),
-    [Input('reset', 'n_clicks'),
-    State("buy_submit", "n_clicks"),
-    Input("coin_mem", "modified_timestamp")]
-)
-def reset_buy(reset, buy, ts):
-    if reset is None or reset == 0:
-        raise PreventUpdate
-    return 0
-
-# Adjusts reset clicks
-@app.callback(
-    Output("reset", "n_clicks"),
-    [Input("coin_mem", "modified_timestamp")]
-)
-def reset_buy(reset):
-    if reset is None:
-        raise PreventUpdate
-    return 0
 
 # Updates Bank Balance
 @app.callback(
@@ -240,7 +199,22 @@ def bank_data(ts, data):
     data = data or {'bank': 1000}
     return data['bank']
 
-# Updates 
+# Changes buy button
+@app.callback(
+    Output("buy_submit", "children"),
+    [Input("buy_b", "n_clicks_timestamp"),
+    Input("sell_b", "n_clicks_timestamp")]
+)
+def submit_change(buy, sell):
+    if buy is None:
+        buy = 0
+    if sell is None:
+        sell = 0
+    
+    if max(buy, sell) == buy:
+        return "Buy"
+    else:
+        return "Sell"
 
 
 
