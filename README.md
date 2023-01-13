@@ -1,5 +1,5 @@
-# Mock-Crypto-Wallet
-This is a Plotly Dash app that is intended to work as a mock crypto wallet. It is still a work in progress, but should be completed by the end of January 2023.
+# Mock-Crypto-Wallet (WIP)
+This is a Plotly Dash app that is intended to work as a mock crypto wallet. The exchange data is from the Binance exchange, accessed via the CCTX public API. It is still a work in progress, but should be completed by the end of January 2023.
 
 ## Setting up the repository
 First, you must set up the virtual environment. This is not included in the repo because it will be different depending on your system. If you would like to make changes to the app and wish to debug it, use Python 3.8. There is currently an issue when running this app on 3.11 with frozen modules, so debugging will not work.
