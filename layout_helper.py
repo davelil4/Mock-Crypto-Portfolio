@@ -10,14 +10,15 @@ wallet_head = html.H2('Wallet', className="text-center mb-4"),
 # Wallet Buttons
 buy_button = dbc.Button(id='buy_b', children=['Buy'], color="primary", n_clicks=0)
 sell_button = dbc.Button(id='sell_b', children=['Sell'], color="primary", n_clicks=0)
-reset_btn = dbc.Button(id='reset', children=['Reset'], color="primary", n_clicks=0)
+reset_btn = dbc.Button(id='reset', children=['Reset'], color="dark")
+refresh_btn = dbc.Button(id='refresh', children='Refresh', color='light')
 USD_bal = dbc.InputGroup(
             [
                 dbc.InputGroupText("$"),
                 dbc.Input(id="bank", placeholder="Initial Balance", type="number", debounce=True),
             ]
         )
-wallet_bal = html.P(id="bal", children="$0")
+wallet_bal = html.P(id="bal", children="Wallet Balance: $0.00")
 
 
 
@@ -36,21 +37,22 @@ price_buy = dbc.InputGroup(
                 dbc.InputGroupText(".00"),
             ]
         )
-buy_submit = dbc.Button(id="buy_submit", children="Submit", color="secondary")
-
-pandasTable = dbc.Table()
+buy_submit = dbc.Button(id="buy_submit", children="Submit", color="success")
 
 # Layout
 row1 = dbc.Row(dbc.Col(wallet_head))
 row2 = dbc.Row(
     [
         dbc.Col(buy_button, width=1), 
-        dbc.Col(sell_button, width=1), 
+        dbc.Col(sell_button, width=1),
         dbc.Col(reset_btn, width=1),
-        dbc.Col(USD_bal, width=2)
+        dbc.Col(refresh_btn, width=1),
+        dbc.Col(html.P("Bank Balance:"), width=1, style={"padding": "5px 0"}),
+        dbc.Col(USD_bal, width=2),
+        dbc.Col(wallet_bal, width=0, style={"padding": "5px 0"})
     ],
     className="mb-4")
-row3 = dbc.Row(
+buy_row = dbc.Row(
             [
                 dbc.Col(children=buy_coin_dropdown, width="auto", className="me-3"), 
                 dbc.Col(children=price_buy, width="auto", className="me-3"),
@@ -58,4 +60,5 @@ row3 = dbc.Row(
             ], 
             className="g-2"
         )
-buy_form_div = html.Div(id="buy_div", children=[row3], hidden=True, className="mb-4", style={'width': "auto"})
+
+buy_form_div = html.Div(id="buy_div", children=[buy_row], hidden=True, className="mb-4", style={'width': "auto"})
