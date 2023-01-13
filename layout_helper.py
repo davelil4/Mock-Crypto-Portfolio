@@ -38,6 +38,22 @@ price_buy = dbc.InputGroup(
         )
 buy_submit = dbc.Button(id="buy_submit", children="Submit", color="secondary")
 
+sell_coin_dropdown = dcc.Dropdown(
+            id="coins_buy",
+            options=help.optionList,
+            value='BTC/USD',
+            clearable=True,
+            style={'width': "100px"}
+        ),
+price_sell = dbc.InputGroup(
+            [
+                dbc.InputGroupText("$"),
+                dbc.Input(id="price_buy", placeholder="Amount", type="number"),
+                dbc.InputGroupText(".00"),
+            ]
+        )
+sell_submit = dbc.Button(id="buy_submit", children="Submit", color="secondary")
+
 pandasTable = dbc.Table()
 
 # Layout
@@ -50,7 +66,7 @@ row2 = dbc.Row(
         dbc.Col(USD_bal, width=2)
     ],
     className="mb-4")
-row3 = dbc.Row(
+buy_row = dbc.Row(
             [
                 dbc.Col(children=buy_coin_dropdown, width="auto", className="me-3"), 
                 dbc.Col(children=price_buy, width="auto", className="me-3"),
@@ -58,4 +74,15 @@ row3 = dbc.Row(
             ], 
             className="g-2"
         )
-buy_form_div = html.Div(id="buy_div", children=[row3], hidden=True, className="mb-4", style={'width': "auto"})
+
+sell_row = dbc.Row(
+            [
+                dbc.Col(children=sell_coin_dropdown, width="auto", className="me-3"), 
+                dbc.Col(children=price_sell, width="auto", className="me-3"),
+                dbc.Col(children=sell_submit, width="auto")
+            ], 
+            className="g-2"
+        )
+
+buy_form_div = html.Div(id="buy_div", children=[buy_row], hidden=True, className="mb-4", style={'width': "auto"})
+sell_form_div = html.Div(id="sell_div", children=[sell_row], hidden=True, className="mb-4", style={'width': "auto"})

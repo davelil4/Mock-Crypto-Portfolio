@@ -48,6 +48,7 @@ app.layout = dbc.Container(children=[
     lay.row1,
     lay.row2,
     lay.buy_form_div,
+    lay.sell_form_div,
     dbc.Row(id="pd_row", children=[])
     
     ],
@@ -62,10 +63,22 @@ def display_time_series(ticker):
     fig = help.chartCoin(ticker)
     return fig
 
+# Shows buy drop-down menu
 @app.callback(
     Output("buy_div", "hidden"),
     Input("buy_b", "n_clicks"))
 def display_buy_form(n_clicks):
+    if n_clicks is None:
+        raise PreventUpdate
+    if n_clicks % 2 == 0:
+        return True
+    return False
+
+# Shows sell dropdown menu
+@app.callback(
+    Output("sell_div", "hidden"),
+    Input("sell_b", "n_clicks"))
+def display_sell_form(n_clicks):
     if n_clicks is None:
         raise PreventUpdate
     if n_clicks % 2 == 0:
@@ -84,7 +97,6 @@ def pd_data(ts, data):
     if ts is None:
         raise PreventUpdate
     
-    test_close=10000
     df = None
     if data is None or 'df' not in data.keys():
         data = {'df': pd.DataFrame(columns=["Coin", "Current Price", "% start"])}
@@ -122,7 +134,10 @@ def pd_data(ts, data):
     State("price_buy", "value"),
     State("coin_mem", "data"),
     Input("bank", "n_submit"),
-    State("bank", "value")]
+    State("bank", "value"),
+    Input("sell_submit", "n_clicks"),
+    State("", "")
+    ]
 
 )
 def update_coins_pd(reset, button, coin, price, data, bank, bValue):
