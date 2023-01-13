@@ -177,25 +177,30 @@ def update_coins_pd(reset, button, coin, price, data, bank, bValue, submit_data)
             new = pd.DataFrame(columns=["Coin", "Current Price", "% start"])
             data['bank'] = 1000
         else: new = pd.DataFrame(data['df'])
-        ticker = help.grabTicker(coin)
-        layout = go.Layout(
-            autosize=False,
-            width=100,
-            height=50)
-        ind_fig = go.Figure(layout=layout)
-        ind_fig.add_trace(go.Indicator(
-            mode = "number+delta",
-            value = ticker['close'],
-            number = { "font": { "size":20 }},
-            delta = {'reference': ticker['open'], 'relative': True}))
-        new = pd.concat([pd.DataFrame({
-            "Coin": [coin],
-            "Current Price": [price],
-            "% start": [dcc.Graph(figure=ind_fig, style={'width': '90px', 'height': '90px'}).to_plotly_json()]
-        }), new])
-        data['df'] = new.to_dict(orient='records')
-        data['bank'] = round((data['bank'] - price), 2)
-        data[coin+'_start'] = ticker['close']
+        if coin in new['Coin'].unique():
+            new.loc[(new['Coin'] == coin), ('Current Price')] = round(
+                (new.loc[(new['Coin'] == coin), ('Current Price')]) + price, 2)
+            data['df'] = new.to_dict(orient='records')
+        else:
+            ticker = help.grabTicker(coin)
+            layout = go.Layout(
+                autosize=False,
+                width=100,
+                height=50)
+            ind_fig = go.Figure(layout=layout)
+            ind_fig.add_trace(go.Indicator(
+                mode = "number+delta",
+                value = ticker['close'],
+                number = { "font": { "size": 20 }},
+                delta = {'reference': ticker['open'], 'relative': True}))
+            new = pd.concat([pd.DataFrame({
+                "Coin": [coin],
+                "Current Price": [price],
+                "% start": [dcc.Graph(figure=ind_fig, style={'width': '90px', 'height': '90px'}).to_plotly_json()]
+            }), new])
+            data['df'] = new.to_dict(orient='records')
+            data['bank'] = round((data['bank'] - price), 2)
+            data[coin+'_start'] = ticker['close']
         return data
     # elif button != None and button != 0 and price != None and submit_data['submit'] == 'sell': 
 
