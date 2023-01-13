@@ -19,7 +19,7 @@ app = Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP, dbc_css])
 
 app.layout = dbc.Container(children=[
     dcc.Store(id='coin_mem', storage_type='local'),
-    # dcc.Store(id='perc_mem', storage_type='memory'),
+    dcc.Store(id='submit_mem', storage_type='memory'),
 
     html.H1(
         children='Mock Crypto Wallet',
@@ -48,7 +48,7 @@ app.layout = dbc.Container(children=[
     lay.row1,
     lay.row2,
     lay.buy_form_div,
-    lay.sell_form_div,
+    # lay.sell_form_div,
     dbc.Row(id="pd_row", children=[])
     
     ],
@@ -74,16 +74,33 @@ def display_buy_form(n_clicks):
         return True
     return False
 
-# Shows sell dropdown menu
+# Sets submit button to buy
 @app.callback(
-    Output("sell_div", "hidden"),
-    Input("sell_b", "n_clicks"))
-def display_sell_form(n_clicks):
-    if n_clicks is None:
-        raise PreventUpdate
-    if n_clicks % 2 == 0:
-        return True
-    return False
+    Output("submit_mem", "data"),
+    Input("buy_b", "n_clicks"),
+    Input("sell_b", "n_clicks"),
+    State("buy_b", "active"),
+    State("sell_b", "active"))
+def submit_change(buy, sell, bActive, sActive):
+    if buy > 0 or sell > 0:
+        if bActive:
+            return {'submit': 'buy'}
+        elif sActive:
+            return {'submit': 'sell'}
+    return {}
+
+# Resets buy button clicks
+
+# # Shows sell dropdown menu
+# @app.callback(
+#     Output("sell_div", "hidden"),
+#     Input("sell_b", "n_clicks"))
+# def display_sell_form(n_clicks):
+#     if n_clicks is None:
+#         raise PreventUpdate
+#     if n_clicks % 2 == 0:
+#         return True
+#     return False
 
 # UPDATES COINS IN WALLET
 
@@ -136,11 +153,11 @@ def pd_data(ts, data):
     Input("bank", "n_submit"),
     State("bank", "value"),
     Input("sell_submit", "n_clicks"),
-    State("", "")
+    State("submit_mem", "data")
     ]
 
 )
-def update_coins_pd(reset, button, coin, price, data, bank, bValue):
+def update_coins_pd(reset, button, coin, price, data, bank, bValue, submit_data):
     
     # if price is not None:
     #     if bank is None or bank < price:
@@ -155,7 +172,7 @@ def update_coins_pd(reset, button, coin, price, data, bank, bValue):
     if bank is not None and bank > 0:
         data['bank'] = bValue
     
-    if button != None and button != 0 and price != None:
+    if button != None and button != 0 and price != None and submit_data['submit'] == 'buy':
         if data == {} or 'df' not in data.keys():
             new = pd.DataFrame(columns=["Coin", "Current Price", "% start"])
             data['bank'] = 1000
@@ -180,6 +197,7 @@ def update_coins_pd(reset, button, coin, price, data, bank, bValue):
         data['bank'] = round((data['bank'] - price), 2)
         data[coin+'_start'] = ticker['close']
         return data
+    # elif button != None and button != 0 and price != None and submit_data['submit'] == 'sell': 
 
     return data
 
