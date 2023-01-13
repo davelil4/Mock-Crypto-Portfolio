@@ -19,7 +19,7 @@ app = Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP, dbc_css])
 
 app.layout = dbc.Container(children=[
     dcc.Store(id='coin_mem', storage_type='local'),
-    dcc.Store(id='bal_ses', storage_type='memory'),
+    # dcc.Store(id='perc_mem', storage_type='memory'),
 
     html.H1(
         children='Mock Crypto Wallet',
@@ -72,9 +72,6 @@ def display_buy_form(n_clicks):
         return True
     return False
 
-
-
-
 # UPDATES COINS IN WALLET
 
 # Updates coin chart after buying/selling/resetting coins
@@ -87,9 +84,33 @@ def pd_data(ts, data):
     if ts is None:
         raise PreventUpdate
     
+    test_close=10000
+    df = None
     if data is None or 'df' not in data.keys():
         data = {'df': pd.DataFrame(columns=["Coin", "Current Price", "% start"])}
-    
+    else:
+        df = pd.DataFrame(pd.DataFrame(data['df']))
+        df.reset_index()
+        for index, row in df.iterrows():
+            ticker = help.grabTicker(row['Coin'])
+            layout = go.Layout(
+                autosize=False,
+                width=100,
+                height=50)
+            ind_fig = go.Figure(layout=layout)
+            ind_fig.add_trace(go.Indicator(
+                mode = "number+delta",
+                value = ticker['close'],
+                number = { "font": { "size":20 }},
+                delta = {'reference': ticker['open'], 'relative': True}))
+            if data[row['Coin']+'_start'] != ticker['close']:
+                open = data[row['Coin']+'_start']
+                change = (open - ticker['close']) / open
+                if change != 0:
+                    df.loc[(df['Coin'] == row['Coin']), ('Current Price')] = round((row['Current Price'] * (1 - change)), 2)
+                df.loc[(df['Coin'] == row['Coin']), ('% start')] = [dcc.Graph(figure=ind_fig, style={'width': '90px', 'height': '90px'}).to_plotly_json()]
+    if df is not None:
+        return [dbc.Table.from_dataframe(df, dark=False)]
     return [dbc.Table.from_dataframe(pd.DataFrame(data['df']), dark=False)]
 
 # Updates coin table data
@@ -132,16 +153,17 @@ def update_coins_pd(reset, button, coin, price, data, bank, bValue):
         ind_fig = go.Figure(layout=layout)
         ind_fig.add_trace(go.Indicator(
             mode = "number+delta",
-            value = ticker['open'],
-            number={"font":{"size":20}},
-            delta = {'reference': ticker['close'], 'relative': True}))
+            value = ticker['close'],
+            number = { "font": { "size":20 }},
+            delta = {'reference': ticker['open'], 'relative': True}))
         new = pd.concat([pd.DataFrame({
             "Coin": [coin],
             "Current Price": [price],
             "% start": [dcc.Graph(figure=ind_fig, style={'width': '90px', 'height': '90px'}).to_plotly_json()]
         }), new])
         data['df'] = new.to_dict(orient='records')
-        data['bank'] = data['bank'] - price
+        data['bank'] = round((data['bank'] - price), 2)
+        data[coin+'_start'] = ticker['close']
         return data
 
     return data
