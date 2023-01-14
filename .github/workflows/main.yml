@@ -1,75 +1,59 @@
-name: Continuous Integration and Delivery
+# Your workflow name.
+name: Deploy to heroku.
 
-on: 
+# Run workflow on every push to main branch.
+on:
   push:
-    branches:
-      - main
+    branches: [main]
 
-env:
-  IMAGE: docker.pkg.github.com/$(echo $GITHUB_REPOSITORY | tr '[A-Z]' '[a-z]')/app
-
+# Your workflows jobs.
 jobs:
-
   build:
-    name: Build Docker Image
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout main
-        uses: actions/checkout@v2.3.4
-      - name: Log in to Github Packages
-        run: echo ${GITHUB_TOKEN} | docker login -u ${GITHUB_ACTOR} --password-stdin docker.pkg.github.com
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      - name: Pull image
-        run: |
-          docker pull ${{ env.IMAGE }}:latest || true
-      - name: Build Image
-        run: |
-          docker build \
-            --cache-from ${{ env.IMAGE }}:latest \
-            --tag ${{ env.IMAGE }}:latest \
-            --file ./dockerfile.prod \
-            "./"
-      - name: Push image
-        run: |
-          docker push ${{ env.IMAGE }}:latest
-  
-  # Below the build job in main.yml
-    release:
-        name: Deploy to Heroku
-        runs-on: ubuntu-latest
-        needs: [build]
-        env:
-          HEROKU_APP_NAME: docker-dash
-          HEROKU_REGISTRY_IMAGE: registry.heroku.com/${HEROKU_APP_NAME}/app
-        steps:
-          - name: Checkout main
-            uses: actions/checkout@v2.3.4
-          - name: Log in to Github Packages
-            run: echo ${GITHUB_TOKEN} | docker login -u ${GITHUB_ACTOR} --password-stdin docker.pkg.github.com
-            env: 
-              GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          - name: Pull image
-            run: |
-              docker pull ${{ env.IMAGE }}:latest || true
-          - name: Build image
-            run: |
-              docker build \
-                --cache-from ${{ env.IMAGE }}:latest \
-                --tag ${{ env.HEROKU_REGISTRY_IMAGE }}:latest \
-                --file ./dockerfile.prod \
-                "./"
-          - name: Log in to the Heroku Container Registry
-            run: docker login -u _ -p ${HEROKU_AUTH_TOKEN} registry.heroku.com
-            env:
-              HEROKU_AUTH_TOKEN: ${{ secrets.HEROKU_AUTH_TOKEN }}
-          - name: Push to the registry
-            run: docker push ${{ env.HEROKU_REGISTRY_IMAGE }}
-          - name: Set environment variables
-            run: |
-              echo "HEROKU_REGISTRY_IMAGE=${{ env.HEROKU_REGISTRY_IMAGE }}" >> $GITHUB_ENV
-              echo "HEROKU_AUTH_TOKEN=${{ secrets.HEROKU_AUTH_TOKEN }}" >> $GITHUB_ENV
-          - name: Release
-            run: |
-              chmod +x ./release.sh
-              ./release.sh
+      # Check-out your repository.
+      - name: Checkout
+        uses: actions/checkout@v2
+
+
+### ⬇ IMPORTANT PART ⬇ ###
+
+      - name: Build, Push and Release a Docker container to Heroku. # Your custom step name
+        uses: gonuit/heroku-docker-deploy@v1.3.3 # GitHub action name (leave it as it is).
+        with:
+          # Below you must provide variables for your Heroku app.
+
+          # The email address associated with your Heroku account.
+          # If you don't want to use repository secrets (which is recommended) you can do:
+          # email: my.email@example.com
+          email: ${{ secrets.HEROKU_EMAIL }}
+          
+          # Heroku API key associated with provided user's email.
+          # Api Key is available under your Heroku account settings.
+          heroku_api_key: ${{ secrets.HEROKU_API_KEY }}
+          
+          # Name of the heroku application to which the build is to be sent.
+          heroku_app_name: ${{ secrets.HEROKU_APP_NAME }}
+
+          # (Optional, default: "./")
+          # Dockerfile directory.
+          # For example, if you have a Dockerfile in the root of your project, leave it as follows:
+          dockerfile_directory: ./
+
+          # (Optional, default: "Dockerfile")
+          # Dockerfile name.
+          dockerfile_name: Dockerfile
+
+          # (Optional, default: "")
+          # Additional options of docker build command.
+          docker_options: "--no-cache"
+
+          # (Optional, default: "web")
+          # Select the process type for which you want the docker container to be uploaded.
+          # By default, this argument is set to "web".
+          # For more information look at https://devcenter.heroku.com/articles/process-model
+          process_type: web
+          
+   
+          
+### ⬆ IMPORTANT PART ⬆ ###
