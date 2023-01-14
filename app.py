@@ -108,27 +108,23 @@ def pd_data(ts, data):
 # Updates coin table data
 @app.callback(
     Output("coin_mem", "data"),
-    [Input("reset", "n_clicks"),
-
-    State("coins_buy", "value"),
+    [State("coins_buy", "value"),
     State("price_buy", "value"),
     State("coin_mem", "data"),
     Input("bank", "n_submit"),
     State("bank", "value"),
-    Input("refresh", "n_clicks"),
-    State("buy_submit", "n_clicks_timestamp"),
+    Input("buy_submit", "n_clicks_timestamp"),
     State("buy_b", "n_clicks_timestamp"),
     State("sell_b", "n_clicks_timestamp"),
-    State("refresh", "n_clicks_timestamp"),
-    State("reset", "n_clicks_timestamp")]
+    Input("refresh", "n_clicks_timestamp"),
+    Input("reset", "n_clicks_timestamp")]
 )
-def update_coins_pd(reset, 
+def update_coins_pd(
                     coin, 
                     price, 
                     data, 
                     bank, 
                     bValue, 
-                    refresh,
                     sub_time,
                     buy_time,
                     sell_time,
