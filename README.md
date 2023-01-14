@@ -1,5 +1,5 @@
 # Mock-Crypto-Wallet
-This is a Plotly Dash app that is intended to work as a mock crypto wallet/exchange. The exchange data is from the Binance exchange, accessed via the CCTX public API. It is still a work in progress. You can also access the app via crypto-wallet.herokuapp.com.
+This is a Plotly Dash app that is intended to work as a mock crypto wallet/exchange. The exchange data is from the Binance exchange, accessed via the CCTX public API. You can also access the app via crypto-wallet.herokuapp.com.
 
 ## Setting up the repository
 First, you must set up the virtual environment. This is not included in the repo because it will be different depending on your system. If you would like to make changes to the app and wish to debug it, use Python 3.8. There is currently an issue when running this app on 3.11 with frozen modules, so debugging will not work.
