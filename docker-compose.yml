@@ -1,11 +1,11 @@
 # docker-compose.yml
 version: '3'
-networks:
-  myapp-network:
+# networks:
+#   myapp-network:
 services:
   # main application
   myapp:
-    container_name: crypto_test
+    container_name: crypto
     build:
       .
     ports:
