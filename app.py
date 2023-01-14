@@ -14,6 +14,7 @@ import helper as h
 
 dbc_css = "https://cdn.jsdelivr.net/gh/AnnMarieW/dash-bootstrap-templates/dbc.min.css"
 app = Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP, dbc_css])
+server=app.server
 
 app.layout = dbc.Container(children=[
     dcc.Store(id='coin_mem', storage_type='local'),
@@ -219,4 +220,6 @@ def submit_change(buy, sell):
 
 
 if __name__ == '__main__':
-    app.run_server(debug=True)
+#     # app.run_server(debug=True)
+    app.run_server(debug=True, host='0.0.0.0', port=8050) 
+#     app.run_server(port=8000)
