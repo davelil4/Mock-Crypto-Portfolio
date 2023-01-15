@@ -152,6 +152,7 @@ def update_coins_pd(
     if reset_time != 0 or sub_time != 0 or buy_time != 0 or sell_time != 0:
         if reset_time == max(reset_time, sub_time, refresh_time):
             data = None
+            return data
         elif sub_time == max(reset_time, sub_time, refresh_time):
             if buy_time == max(buy_time, sell_time):
                 data = h.purchase(coin, price, data)
@@ -180,7 +181,7 @@ def update_coins_pd(
                 change = (open - ticker['close']) / open
                 if change != 0:
                     df.loc[(df['Coin'] == row['Coin']), ('Current Price')] = round((row['Current Price'] * (1 - change)), 2)
-                df.loc[(df['Coin'] == row['Coin']), ('% start')] = [dcc.Graph(figure=ind_fig, style={'width': '90px', 'height': '90px'}).to_plotly_json()]
+                df.loc[(df['Coin'] == row['Coin']), ('Market Price')] = [dcc.Graph(figure=ind_fig, style={'width': '90px', 'height': '90px'}).to_plotly_json()]
                 data[row['Coin']+'_start'] = ticker['close']
         data['df'] = df.to_dict(orient='records')
     return data
