@@ -12,7 +12,7 @@ import layout_helper as lay
 def purchase(coin, price, data):
     new = None
     if data == {} or 'df' not in data.keys() or len(data['df']) == 0:
-            new = pd.DataFrame(columns=["Coin", "Current Price", "% start"])
+            new = pd.DataFrame(columns=["Coin", "Current Price", "Market Price"])
             data['bank'] = 1000
     else: 
         new = pd.DataFrame(data['df'])
@@ -36,7 +36,7 @@ def purchase(coin, price, data):
         new = pd.concat([pd.DataFrame({
             "Coin": [coin],
             "Current Price": [price],
-            "% start": [dcc.Graph(figure=ind_fig, style={'width': '90px', 'height': '90px'}).to_plotly_json()]
+            "Market Price": [dcc.Graph(figure=ind_fig, style={'width': '90px', 'height': '90px'}).to_plotly_json()]
         }), new])
         data['df'] = new.to_dict(orient='records')
         data['bank'] = round((data['bank'] - price), 2)

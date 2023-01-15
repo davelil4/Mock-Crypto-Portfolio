@@ -101,9 +101,9 @@ def pd_data(ts, data):
     if ts is None:
         raise PreventUpdate
     
-    data = data or {'df': pd.DataFrame(columns=["Coin", "Current Price", "% start"])}
+    data = data or {'df': pd.DataFrame(columns=["Coin", "Current Price", "Market Price"])}
     if 'df' not in data.keys() or len(data['df']) == 0:
-        data['df'] = pd.DataFrame(columns=["Coin", "Current Price", "% start"])
+        data['df'] = pd.DataFrame(columns=["Coin", "Current Price", "Market Price"])
     return [dbc.Table.from_dataframe(pd.DataFrame(data['df']), dark=False)]
 
 # Updates coin table data
@@ -175,12 +175,13 @@ def update_coins_pd(
                 number = { "font": { "size":20 }},
                 delta = {'reference': ticker['open'], 'relative': True}))
             if data[row['Coin']+'_start'] != ticker['close']:
+                c = row['Coin']+'_start'
                 open = data[row['Coin']+'_start']
                 change = (open - ticker['close']) / open
                 if change != 0:
                     df.loc[(df['Coin'] == row['Coin']), ('Current Price')] = round((row['Current Price'] * (1 - change)), 2)
                 df.loc[(df['Coin'] == row['Coin']), ('% start')] = [dcc.Graph(figure=ind_fig, style={'width': '90px', 'height': '90px'}).to_plotly_json()]
-                data[coin+'_start'] = ticker['close']
+                data[row['Coin']+'_start'] = ticker['close']
         data['df'] = df.to_dict(orient='records')
     return data
 
