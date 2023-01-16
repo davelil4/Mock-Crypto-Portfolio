@@ -2,12 +2,10 @@ from dash import dcc, html
 import dash_bootstrap_components as dbc
 import api_helper as help
 
+# Portfolio title
+portfolio_head = html.H2('Portfolio', className="bg-secondary text-white text-center mb-2"),
 
-
-# Wallet title
-wallet_head = html.H2('Wallet', className="text-center mb-4"),
-
-# Wallet Buttons
+# Exchange Buttons
 buy_button = dbc.Button(id='buy_b', children=['Buy'], color="primary", n_clicks=0)
 sell_button = dbc.Button(id='sell_b', children=['Sell'], color="primary", n_clicks=0)
 reset_btn = dbc.Button(id='reset', children=['Reset'], color="dark")
@@ -18,7 +16,7 @@ USD_bal = dbc.InputGroup(
                 dbc.Input(id="bank", placeholder="Initial Balance", type="number", debounce=True),
             ]
         )
-wallet_bal = html.P(id="bal", children="Wallet Balance: $0.00")
+portfolio_bal = html.P(id="bal", children="Portfolio Balance: $0.00")
 
 
 
@@ -39,8 +37,33 @@ price_buy = dbc.InputGroup(
         )
 buy_submit = dbc.Button(id="buy_submit", children="Submit", color="success")
 
-# Layout
-row1 = dbc.Row(dbc.Col(wallet_head))
+
+# Layout Items
+
+exchange_row = dbc.Row(dbc.Col(html.H2('Exchange', className="bg-secondary text-white text-center")))
+
+chart_row = dbc.Row(
+    dbc.Col(
+        html.Div([
+            dcc.Graph(id="time-series-chart"),
+            dbc.Row(
+                [
+                    dbc.Col(html.P("Select coin:"), width=1, style={"padding": "5px 0"}),
+                    dbc.Col(dcc.Dropdown(
+                        id="ticker",
+                        options=help.optionList,
+                        value='BTC/USD',
+                        clearable=False,
+                        className="mb-4",
+                        style={"width": "100px"}
+            ), width=1)], className="g-0")
+        ]),
+    ),
+    className="g-2"
+)
+
+port_row = dbc.Row(dbc.Col(portfolio_head))
+
 row2 = dbc.Row(
     [
         dbc.Col(buy_button, width=1), 
@@ -49,9 +72,9 @@ row2 = dbc.Row(
         dbc.Col(refresh_btn, width=1),
         dbc.Col(html.P("Bank Balance:"), width=1, style={"padding": "5px 0"}),
         dbc.Col(USD_bal, width=2),
-        dbc.Col(wallet_bal, width=0, style={"padding": "5px 0"})
+        dbc.Col(portfolio_bal, width=0, style={"padding": "5px 0"})
     ],
-    className="mb-4")
+    className="mb-2")
 buy_row = dbc.Row(
             [
                 dbc.Col(children=buy_coin_dropdown, width="auto", className="me-3"), 
@@ -61,4 +84,9 @@ buy_row = dbc.Row(
             className="g-2"
         )
 
-buy_form_div = html.Div(id="buy_div", children=[buy_row], hidden=True, className="mb-4", style={'width': "auto"})
+trade_collapse = dbc.Collapse(
+    id="trade_collapse", 
+    children=dbc.Card(dbc.CardBody(buy_row)), 
+    className="mb-2", 
+    style={'width': "525px"}, 
+    is_open=False)
