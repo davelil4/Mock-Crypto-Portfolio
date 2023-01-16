@@ -21,18 +21,17 @@ app.layout = dbc.Container(children=[
     dcc.Store(id='submit_mem', storage_type='memory'),
 
     html.H1(
-        children='Mock Crypto Wallet',
+        children='Mock Crypto Trading Platform',
         className="bg-primary text-white p-2 mb-2 text-center"
     ),
 
-    html.Div(children='A mock crypto wallet you can run from your own computer.', style={
-        'textAlign': 'center'
-    }),
+    # html.Div(children='A mock crypto wallet you can run from your own computer.', style={
+    #     'textAlign': 'center'
+    # }),
 
 
     # Dropdown to change which coin data is showing from BINANCE
     html.Div(children=[
-        html.H4('Crypto price analysis'),
         dcc.Graph(id="time-series-chart"),
         html.P("Select coin:"),
         dcc.Dropdown(
@@ -44,10 +43,9 @@ app.layout = dbc.Container(children=[
         ),
     ]),
     
-    lay.row1,
     lay.row2,
     lay.buy_form_div,
-    # lay.sell_form_div,
+    lay.row1,
     dbc.Row(id="pd_row", children=[])
     
     ],
@@ -86,7 +84,7 @@ def update_wallet_bal(n, data):
     data = data or None
     if data is not None and 'df' in data.keys() and len(data['df']) != 0:
         df = pd.DataFrame(data['df'])
-        return "Wallet Balance: $" + str(df['Current Price'].sum())
+        return "Wallet Balance: $" + str(df['Current Price ($)'].sum())
     return "Wallet Balance: $0.00"
 
 
@@ -101,9 +99,9 @@ def pd_data(ts, data):
     if ts is None:
         raise PreventUpdate
     
-    data = data or {'df': pd.DataFrame(columns=["Coin", "Current Price", "Market Price"])}
+    data = data or {'df': pd.DataFrame(columns=["Coin", "Current Price ($)", "Market Price"])}
     if 'df' not in data.keys() or len(data['df']) == 0:
-        data['df'] = pd.DataFrame(columns=["Coin", "Current Price", "Market Price"])
+        data['df'] = pd.DataFrame(columns=["Coin", "Current Price ($)", "Market Price"])
     return [dbc.Table.from_dataframe(pd.DataFrame(data['df']), dark=False)]
 
 # Updates coin table data
@@ -180,7 +178,7 @@ def update_coins_pd(
                 open = data[row['Coin']+'_start']
                 change = (open - ticker['close']) / open
                 if change != 0:
-                    df.loc[(df['Coin'] == row['Coin']), ('Current Price')] = round((row['Current Price'] * (1 - change)), 2)
+                    df.loc[(df['Coin'] == row['Coin']), ('Current Price ($)')] = round((row['Current Price ($)'] * (1 - change)), 2)
                 df.loc[(df['Coin'] == row['Coin']), ('Market Price')] = [dcc.Graph(figure=ind_fig, style={'width': '90px', 'height': '90px'}).to_plotly_json()]
                 data[row['Coin']+'_start'] = ticker['close']
         data['df'] = df.to_dict(orient='records')

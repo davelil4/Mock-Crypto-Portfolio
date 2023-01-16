@@ -31,7 +31,8 @@ def chartCoin(symbol):
 
     fig = go.Figure(data=[go.Candlestick(x=dates,
                         open=open_data, high=high_data,
-                        low=low_data, close=close_data)])
+                        low=low_data, close=close_data)],
+                    layout={'title': symbol + " analysis chart"})
     
     return fig
 

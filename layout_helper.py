@@ -5,7 +5,7 @@ import api_helper as help
 
 
 # Wallet title
-wallet_head = html.H2('Wallet', className="text-center mb-4"),
+wallet_head = html.H2('Portfolio', className="text-center mb-4"),
 
 # Wallet Buttons
 buy_button = dbc.Button(id='buy_b', children=['Buy'], color="primary", n_clicks=0)
