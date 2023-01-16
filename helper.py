@@ -12,13 +12,13 @@ import layout_helper as lay
 def purchase(coin, price, data):
     new = None
     if data == {} or 'df' not in data.keys() or len(data['df']) == 0:
-            new = pd.DataFrame(columns=["Coin", "Current Price", "Market Price"])
+            new = pd.DataFrame(columns=["Coin", "Current Price ($)", "Market Price ($)"])
             data['bank'] = 1000
     else: 
         new = pd.DataFrame(data['df'])
     if coin in new['Coin'].unique():
-        new.loc[(new['Coin'] == coin), ('Current Price')] = round(
-            (new.loc[(new['Coin'] == coin), ('Current Price')]) + price, 2)
+        new.loc[(new['Coin'] == coin), ('Current Price ($)')] = round(
+            (new.loc[(new['Coin'] == coin), ('Current Price ($)')]) + price, 2)
         data['df'] = new.to_dict(orient='records')
         data['bank'] = data['bank'] - price
     else:
@@ -35,8 +35,8 @@ def purchase(coin, price, data):
             delta = {'reference': ticker['open'], 'relative': True}))
         new = pd.concat([pd.DataFrame({
             "Coin": [coin],
-            "Current Price": [price],
-            "Market Price": [dcc.Graph(figure=ind_fig, style={'width': '90px', 'height': '90px'}).to_plotly_json()]
+            "Current Price ($)": [price],
+            "Market Price ($)": [dcc.Graph(figure=ind_fig, style={'width': '90px', 'height': '90px'}).to_plotly_json()]
         }), new])
         data['df'] = new.to_dict(orient='records')
         data['bank'] = round((data['bank'] - price), 2)
@@ -48,9 +48,9 @@ def sell(coin, price, data):
         raise PreventUpdate
     df = pd.DataFrame(data['df'])
     if coin in df['Coin'].unique():
-        df.loc[(df['Coin'] == coin), ('Current Price')] = round(
-            (df.loc[(df['Coin'] == coin), ('Current Price')]) - price, 2)
-        if df.loc[(df['Coin'] == coin), ('Current Price')].values[0] == 0:
+        df.loc[(df['Coin'] == coin), ('Current Price ($)')] = round(
+            (df.loc[(df['Coin'] == coin), ('Current Price ($)')]) - price, 2)
+        if df.loc[(df['Coin'] == coin), ('Current Price ($)')].values[0] == 0:
             df = df[df['Coin'] != coin]
         data['df'] = df.to_dict(orient='records')
         data['bank'] = data['bank'] + price
