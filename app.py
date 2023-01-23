@@ -12,7 +12,7 @@ import layout_helper as lay
 import helper as h
 
 dbc_css = "https://cdn.jsdelivr.net/gh/AnnMarieW/dash-bootstrap-templates/dbc.min.css"
-app = Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP, dbc_css])
+app = Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP, dbc_css], title="Mock Cryptocurreny Portfolio")
 server=app.server
 
 app.layout = dbc.Container(children=[
