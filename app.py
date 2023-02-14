@@ -89,7 +89,7 @@ def update_portfolio_bal(n, data):
     data = data or None
     if data is not None and 'df' in data.keys() and len(data['df']) != 0:
         df = pd.DataFrame(data['df'])
-        return "Portfolio Balance: $" + str(round(df['Current Price ($)'].sum(), 2))
+        return "Portfolio Balance: $" + str(round(df['Current Value ($)'].sum(), 2))
     return "Portfolio Balance: $0.00"
 
 
@@ -104,9 +104,9 @@ def pd_data(ts, data):
     if ts is None:
         raise PreventUpdate
     
-    data = data or {'df': pd.DataFrame(columns=["Coin", "Current Price ($)", "Market Price ($)"])}
+    data = data or {'df': pd.DataFrame(columns=["Coin", "Current Value ($)", "Market Value ($)"])}
     if 'df' not in data.keys() or len(data['df']) == 0:
-        data['df'] = pd.DataFrame(columns=["Coin", "Current Price ($)", "Market Price ($)"])
+        data['df'] = pd.DataFrame(columns=["Coin", "Current Value ($)", "Market Value ($)"])
     return [dbc.Table.from_dataframe(pd.DataFrame(data['df']), dark=False)]
 
 # Updates coin table data
@@ -163,7 +163,7 @@ def update_coins_pd(
                 (pd.DataFrame(data['df'])['Coin'] == coin), ('Current Price ($)')].values[0] > price:
                 data = h.sell(coin, price, data)
 
-    # Updates Coins if Market Price ($) changes
+    # Updates Coins if Market Value ($) changes
     if not (data is None or 'df' not in data.keys()) and len(data['df']) != 0:
         df = pd.DataFrame(pd.DataFrame(data['df']))
         df.reset_index()
@@ -184,8 +184,8 @@ def update_coins_pd(
                 open = data[row['Coin']+'_start']
                 change = (open - ticker['close']) / open
                 if change != 0:
-                    df.loc[(df['Coin'] == row['Coin']), ('Current Price ($)')] = round((row['Current Price ($)'] * (1 - change)), 2)
-                df.loc[(df['Coin'] == row['Coin']), ('Market Price ($)')] = [dcc.Graph(figure=ind_fig, style={'width': '90px', 'height': '90px'}).to_plotly_json()]
+                    df.loc[(df['Coin'] == row['Coin']), ('Current Value ($)')] = round((row['Current Value ($)'] * (1 - change)), 2)
+                df.loc[(df['Coin'] == row['Coin']), ('Market Value ($)')] = [dcc.Graph(figure=ind_fig, style={'width': '90px', 'height': '90px'}).to_plotly_json()]
                 data[row['Coin']+'_start'] = ticker['close']
         data['df'] = df.to_dict(orient='records')
     return data
