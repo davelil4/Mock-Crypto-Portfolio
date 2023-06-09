@@ -160,7 +160,7 @@ def update_coins_pd(
             if buy_time == max(buy_time, sell_time) and price <= bValue:
                 data = h.purchase(coin, price, data)
             elif sell_time == max(sell_time, buy_time) and pd.DataFrame(data['df']).loc[
-                (pd.DataFrame(data['df'])['Coin'] == coin), ('Current Price ($)')].values[0] > price:
+                (pd.DataFrame(data['df'])['Coin'] == coin), ('Current Value ($)')].values[0] >= price:
                 data = h.sell(coin, price, data)
 
     # Updates Coins if Market Value ($) changes
@@ -251,16 +251,9 @@ def submit_error(n, price, bal, button, data, coin, reset, subTime):
         if not price or not bal or price < 0 or \
             (button == 'Buy' and price > bal) or \
                 (button == 'Sell' and pd.DataFrame(data['df']).loc[
-                    (pd.DataFrame(data['df'])['Coin'] == coin), ('Current Price ($)')].values[0] < price):
+                    (pd.DataFrame(data['df'])['Coin'] == coin), ('Current Value ($)')].values[0] < price):
             return True
     return False
-        
-
-# @app.callback(
-    
-# )
-# def _error():
-#     return
 
 if __name__ == '__main__':
 #     # app.run_server(debug=True)
