@@ -156,10 +156,11 @@ def update_coins_pd(
         if reset_time == max(reset_time, sub_time, refresh_time):
             data = None
             return data
-        elif sub_time == max(reset_time, sub_time, refresh_time):
-            if buy_time == max(buy_time, sell_time):
+        elif sub_time == max(reset_time, sub_time, refresh_time) and price > 0:
+            if buy_time == max(buy_time, sell_time) and price <= bValue:
                 data = h.purchase(coin, price, data)
-            elif sell_time == max(sell_time, buy_time):
+            elif sell_time == max(sell_time, buy_time) and pd.DataFrame(data['df']).loc[
+                (pd.DataFrame(data['df'])['Coin'] == coin), ('Current Price ($)')].values[0] > price:
                 data = h.sell(coin, price, data)
 
     # Updates Coins if Market Value ($) changes
@@ -226,6 +227,40 @@ def submit_change(buy, sell):
 def update_form_input(n):
     return None
 
+# Displays error regarding whether you can purchase/sell with given input frmo form
+@app.callback(
+    Output("price_buy", "invalid"),
+    [Input("buy_submit", "n_clicks"),
+     State("price_buy", "value"),
+     State("bank", "value"),
+     State("buy_submit", "children"),
+     State("coin_mem", "data"),
+     State("coins_buy", "value"),
+     Input("reset", "n_clicks_timestamp"),
+     State("buy_submit", "n_clicks_timestamp")]
+    
+)
+def submit_error(n, price, bal, button, data, coin, reset, subTime):
+    if reset is None:
+        reset = 0
+    if subTime is None:
+        subTime = 0
+    if reset > subTime:
+        return False
+    if n:
+        if not price or not bal or price < 0 or \
+            (button == 'Buy' and price > bal) or \
+                (button == 'Sell' and pd.DataFrame(data['df']).loc[
+                    (pd.DataFrame(data['df'])['Coin'] == coin), ('Current Price ($)')].values[0] < price):
+            return True
+    return False
+        
+
+# @app.callback(
+    
+# )
+# def _error():
+#     return
 
 if __name__ == '__main__':
 #     # app.run_server(debug=True)

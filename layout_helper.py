@@ -27,14 +27,15 @@ buy_coin_dropdown = dcc.Dropdown(
             value='BTC/USD',
             clearable=True,
             style={'width': "100px"}
-        ),
-price_buy = dbc.InputGroup(
-            [
-                dbc.InputGroupText("$"),
-                dbc.Input(id="price_buy", placeholder="Amount", type="number"),
-                dbc.InputGroupText(".00"),
-            ]
         )
+price_buy = dbc.InputGroup(
+        [
+            dbc.InputGroupText("$"),
+            dbc.Input(id="price_buy", placeholder="Amount", type="number"),
+            dbc.InputGroupText(".00"),
+            dbc.FormFeedback("Invalid value submitted.", type="invalid")
+        ]
+    )
 buy_submit = dbc.Button(id="buy_submit", children="Submit", color="success")
 
 
@@ -77,8 +78,8 @@ row2 = dbc.Row(
     className="mb-2")
 buy_row = dbc.Row(
             [
-                dbc.Col(children=buy_coin_dropdown, width="auto", className="me-3"), 
-                dbc.Col(children=price_buy, width="auto", className="me-3"),
+                dbc.Col(children=buy_coin_dropdown, width="auto", className="me-2"), 
+                dbc.Col(children=price_buy, width="6", className="me-2"),
                 dbc.Col(children=buy_submit, width="auto")
             ], 
             className="g-2"
@@ -88,5 +89,5 @@ trade_collapse = dbc.Collapse(
     id="trade_collapse", 
     children=dbc.Card(dbc.CardBody(buy_row)), 
     className="mb-2", 
-    style={'width': "525px"}, 
+    style={"width": "25rem"},
     is_open=False)

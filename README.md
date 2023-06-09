@@ -21,7 +21,7 @@ pip install -r requirements.txt
 ## Starting up the app
 
 ### Regular
-To start up the app, run `python app.py`. Then visit http://127.0.0.1:8050/ in your web browser.
+To start up the app, run `python app.py`. Then visit http://0.0.0.0:8050/ in your web browser.
 
 ### Docker
 You can also run this app with docker. If you have docker installed, run `docker-compose up` while in the repository's directory. The app will be running on 0.0.0.0:8050. If you are doing it this way, make sure to either delete the dockerfile.prod (used only for production) or specify you are using the regular dockerfile in the docker-compose.yml file.
