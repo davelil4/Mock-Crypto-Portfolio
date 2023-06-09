@@ -1,13 +1,9 @@
 # HELPER FUNCTINONS
-from dash import Dash, dcc, html
-from dash.dependencies import Input, Output, State
+from dash import dcc
 from dash.exceptions import PreventUpdate
-import dash_bootstrap_components as dbc
-# import plotly.express as px
 import pandas as pd
 import plotly.graph_objects as go
 import api_helper as help
-import layout_helper as lay
 
 def purchase(coin, price, data):
     new = None
